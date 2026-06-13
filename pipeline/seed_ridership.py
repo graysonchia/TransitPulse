@@ -107,6 +107,11 @@ def insert_batch(engine: Engine, rows: list[dict]) -> None:
         connection.execute(statement, rows)
 
 
+def count_existing_rows(engine: Engine) -> int:
+    with engine.connect() as connection:
+        return connection.execute(text("SELECT COUNT(*) FROM fact_ridership")).scalar_one()
+
+
 def main() -> None:
     print("[1/3] Connecting to database...")
     engine = build_engine()
@@ -121,16 +126,26 @@ def main() -> None:
         f"{len(dimensions['times'])} times."
     )
 
-    print(f"[3/3] Generating and inserting {TOTAL_ROWS:,} ridership rows...")
+    existing_rows = count_existing_rows(engine)
+    rows_to_insert = max(TOTAL_ROWS - existing_rows, 0)
+    if rows_to_insert == 0:
+        print(f"[3/3] fact_ridership already has at least {TOTAL_ROWS:,} rows.")
+        print("Ridership seeding complete.")
+        return
+
+    print(
+        f"[3/3] Generating and inserting {rows_to_insert:,} ridership rows "
+        f"to reach {TOTAL_ROWS:,} total..."
+    )
     inserted = 0
-    while inserted < TOTAL_ROWS:
-        current_batch_size = min(BATCH_SIZE, TOTAL_ROWS - inserted)
+    while inserted < rows_to_insert:
+        current_batch_size = min(BATCH_SIZE, rows_to_insert - inserted)
         rows = make_batch(dimensions, current_batch_size)
         insert_batch(engine, rows)
         inserted += current_batch_size
 
-        if inserted % 10_000 == 0 or inserted == TOTAL_ROWS:
-            print(f"      Inserted {inserted:,}/{TOTAL_ROWS:,} rows")
+        if inserted % 10_000 == 0 or inserted == rows_to_insert:
+            print(f"      Inserted {inserted:,}/{rows_to_insert:,} new rows")
 
     print("Ridership seeding complete.")
 

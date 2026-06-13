@@ -21,7 +21,8 @@ CREATE TABLE dim_time (
     hour        INT NOT NULL,
     minute      INT NOT NULL,
     period      VARCHAR(20) NOT NULL, -- e.g. 'Morning Peak', 'Off-Peak'
-    is_peak_hour BOOLEAN NOT NULL DEFAULT FALSE
+    is_peak_hour BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE (hour, minute)
 );
 
 -- Dimension: Route
