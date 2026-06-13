@@ -186,7 +186,11 @@ def get_engine() -> Engine:
 
     db_config = {}
     for name in REQUIRED_DB_VARS:
-        db_config[name] = st.secrets.get(name, getenv(name))
+        try:
+            secret_value = st.secrets[name]
+        except Exception:
+            secret_value = None
+        db_config[name] = secret_value or getenv(name)
 
     missing = [name for name, value in db_config.items() if not value]
     if missing:
