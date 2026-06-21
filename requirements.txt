@@ -8,3 +8,10 @@ plotly
 seaborn
 matplotlib
 prophet
+fastapi
+uvicorn[standard]
+asyncpg
+sqlalchemy[asyncio]
+joblib
+scikit-learn
+python-multipart
